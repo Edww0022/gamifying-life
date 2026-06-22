@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#12110f" />
+  <title>Sidequest — Turn life into an adventure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#"><span class="brand-mark">S</span><span>sidequest</span></a>
+      <nav>
+        <button class="nav-item active" data-view="today"><span>⌁</span> Today</button>
+        <button class="nav-item" data-view="quests"><span>◇</span> All quests</button>
+        <button class="nav-item" data-view="rewards"><span>✦</span> Rewards</button>
+        <button class="nav-item" data-view="settings"><span>⚙</span> Customize</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="mini-profile">
+          <div class="avatar" id="miniAvatar">W</div>
+          <div><strong id="miniName">Wanderer</strong><small id="miniLevel">Level 1</small></div>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <button class="menu-button" id="menuButton">☰</button>
+        <div class="streak">🔥 <strong id="streakCount">0</strong> day streak</div>
+        <button class="sync-status" id="syncStatus">● Local only</button>
+        <button class="primary compact" data-open="quest">＋ New quest</button>
+      </header>
+
+      <section class="view active" id="todayView">
+        <div class="hero">
+          <div>
+            <p class="eyebrow" id="dateLabel"></p>
+            <h1>Good <span id="dayPeriod">morning</span>, <span id="heroName">Wanderer</span>.</h1>
+            <p class="subtle">What will you make progress on today?</p>
+          </div>
+          <div class="level-card">
+            <div class="level-top"><span>LEVEL <strong id="levelNumber">1</strong></span><span><strong id="currentXp">0</strong> / <span id="nextXp">100</span> XP</span></div>
+            <div class="progress"><div id="xpBar"></div></div>
+            <small id="xpRemaining">100 XP until your next level</small>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat"><span class="stat-icon lavender">✦</span><div><small>Total XP</small><strong id="totalXpStat">0</strong></div></article>
+          <article class="stat"><span class="stat-icon mint">✓</span><div><small>Quests done</small><strong id="doneStat">0</strong></div></article>
+          <article class="stat"><span class="stat-icon peach">↗</span><div><small>This week</small><strong id="weekStat">0 XP</strong></div></article>
+        </div>
+
+        <div class="section-heading"><div><p class="eyebrow">YOUR ADVENTURE</p><h2>Today’s quests</h2></div><button class="text-button" data-open="quest">Add quest ＋</button></div>
+        <div class="quest-list" id="todayQuestList"></div>
+        <div class="empty-state" id="todayEmpty"><span>◇</span><h3>Your quest log is open</h3><p>Add one small thing you’d like to accomplish today.</p><button class="primary" data-open="quest">Create your first quest</button></div>
+      </section>
+
+      <section class="view" id="questsView">
+        <div class="page-heading"><div><p class="eyebrow">QUEST LOG</p><h1>All quests</h1><p class="subtle">Every step counts, no matter how small.</p></div><button class="primary" data-open="quest">＋ New quest</button></div>
+        <div class="filter-row" id="questFilters"><button class="chip active" data-filter="active">Active</button><button class="chip" data-filter="completed">Completed</button><button class="chip" data-filter="all">All</button></div>
+        <div class="quest-list" id="allQuestList"></div>
+      </section>
+
+      <section class="view" id="rewardsView">
+        <div class="page-heading"><div><p class="eyebrow">TREASURE CHEST</p><h1>Rewards</h1><p class="subtle">Give your future self something lovely to work toward.</p></div><button class="primary" data-open="reward">＋ New reward</button></div>
+        <div class="reward-grid" id="rewardGrid"></div>
+        <div class="empty-state" id="rewardEmpty"><span>✦</span><h3>Dream up a reward</h3><p>Choose something to unlock when you reach an XP milestone.</p><button class="primary" data-open="reward">Add a reward</button></div>
+      </section>
+
+      <section class="view" id="settingsView">
+        <div class="page-heading"><div><p class="eyebrow">MAKE IT YOURS</p><h1>Customize</h1><p class="subtle">Tune the game to fit the way you actually live.</p></div></div>
+        <div class="cloud-card" id="cloudCard"></div>
+        <form class="settings-card" id="settingsForm">
+          <label>Adventurer name<input name="name" maxlength="24" required /></label>
+          <label>Avatar character<input name="avatar" maxlength="2" required /></label>
+          <label>XP per level<input name="xpPerLevel" type="number" min="20" max="1000" step="10" required /></label>
+          <label>Accent color<input name="accent" type="color" /></label>
+          <button class="primary" type="submit">Save changes</button>
+        </form>
+        <div class="danger-card"><div><strong>Fresh start</strong><p>Erase all quests, rewards, and progress from this device.</p></div><button class="danger-button" id="resetButton">Reset everything</button></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="questDialog">
+    <form method="dialog" id="questForm">
+      <div class="dialog-head"><div><p class="eyebrow">NEW ADVENTURE</p><h2>Create a quest</h2></div><button class="icon-button" value="cancel">×</button></div>
+      <label>Quest name<input name="title" placeholder="e.g. Take a 20 minute walk" maxlength="70" required autofocus /></label>
+      <div class="form-row">
+        <label>Category<select name="category"><option>Wellness</option><option>Growth</option><option>Work</option><option>Home</option><option>Social</option><option>Creative</option></select></label>
+        <label>Difficulty<select name="xp"><option value="10">Tiny · 10 XP</option><option value="25" selected>Easy · 25 XP</option><option value="50">Medium · 50 XP</option><option value="100">Epic · 100 XP</option></select></label>
+      </div>
+      <label>Schedule<select name="repeat"><option value="once">One-time</option><option value="daily">Repeat daily</option><option value="weekly">Repeat weekly</option></select></label>
+      <label class="check-label"><input type="checkbox" name="today" checked /> Add to today</label>
+      <button class="primary full" value="default">Add to quest log</button>
+    </form>
+  </dialog>
+
+  <dialog id="rewardDialog">
+    <form method="dialog" id="rewardForm">
+      <div class="dialog-head"><div><p class="eyebrow">NEW TREASURE</p><h2>Create a reward</h2></div><button class="icon-button" value="cancel">×</button></div>
+      <label>Reward name<input name="title" placeholder="e.g. A guilt-free movie night" maxlength="70" required /></label>
+      <label>Unlock at<input name="xp" type="number" min="10" step="10" value="100" required /><span class="input-suffix">XP</span></label>
+      <label>Icon<select name="icon"><option>☕</option><option>🎬</option><option>🎮</option><option>🛍️</option><option>🍰</option><option>🌿</option><option>✈️</option><option>🎁</option></select></label>
+      <button class="primary full" value="default">Add reward</button>
+    </form>
+  </dialog>
+  <dialog id="authDialog">
+    <form method="dialog" id="authForm">
+      <div class="dialog-head"><div><p class="eyebrow">CLOUD SAVE</p><h2>Sync your adventure</h2></div><button class="icon-button" value="cancel">×</button></div>
+      <p class="auth-copy">Use the same account on your phone and computer to keep quests, XP, and rewards in sync.</p>
+      <label>Email<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" minlength="6" required /></label>
+      <div class="auth-actions"><button class="primary" type="submit" value="signin">Sign in</button><button class="secondary" type="submit" value="signup">Create account</button></div>
+      <p class="auth-message" id="authMessage"></p>
+    </form>
+  </dialog>
+  <div class="toast" id="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
