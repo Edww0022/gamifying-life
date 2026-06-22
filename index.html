@@ -135,8 +135,19 @@
       <p class="auth-copy">Use the same account on your phone and computer to keep quests, XP, and rewards in sync.</p>
       <label>Email<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
       <label>Password<input name="password" type="password" autocomplete="current-password" minlength="6" required /></label>
+      <button class="forgot-button" id="forgotPasswordButton" type="button">Forgot your password?</button>
       <div class="auth-actions"><button class="primary" type="submit" value="signin">Sign in</button><button class="secondary" type="submit" value="signup">Create account</button></div>
       <p class="auth-message" id="authMessage"></p>
+    </form>
+  </dialog>
+  <dialog id="resetPasswordDialog">
+    <form method="dialog" id="resetPasswordForm">
+      <div class="dialog-head"><div><p class="eyebrow">ACCOUNT RECOVERY</p><h2>Choose a new password</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+      <p class="auth-copy">Enter a new password for your LifeOS account.</p>
+      <label>New password<input name="password" type="password" autocomplete="new-password" minlength="8" required /></label>
+      <label>Confirm new password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required /></label>
+      <button class="primary full" type="submit">Update password</button>
+      <p class="auth-message" id="resetPasswordMessage"></p>
     </form>
   </dialog>
   <div class="toast" id="toast"></div>
