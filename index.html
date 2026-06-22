@@ -113,7 +113,8 @@
         <label>Category<select name="category" id="questCategory"></select></label>
         <label>Difficulty<select name="xp"><option value="10">Tiny · 10 XP</option><option value="25" selected>Easy · 25 XP</option><option value="50">Medium · 50 XP</option><option value="100">Epic · 100 XP</option></select></label>
       </div>
-      <label>Schedule<select name="repeat"><option value="once">One-time</option><option value="daily">Repeat daily</option><option value="weekly">Repeat weekly</option></select></label>
+      <label>Schedule<select name="repeat" id="questRepeat"><option value="once">One-time</option><option value="daily">Repeat daily</option><option value="custom">Repeat on selected days</option></select></label>
+      <fieldset class="repeat-days" id="repeatDays" hidden><legend>Repeat on</legend><div class="day-picker"><label><input type="checkbox" name="repeatDays" value="1"><span>Mon</span></label><label><input type="checkbox" name="repeatDays" value="2"><span>Tue</span></label><label><input type="checkbox" name="repeatDays" value="3"><span>Wed</span></label><label><input type="checkbox" name="repeatDays" value="4"><span>Thu</span></label><label><input type="checkbox" name="repeatDays" value="5"><span>Fri</span></label><label><input type="checkbox" name="repeatDays" value="6"><span>Sat</span></label><label><input type="checkbox" name="repeatDays" value="0"><span>Sun</span></label></div></fieldset>
       <label class="check-label"><input type="checkbox" name="today" checked /> Add to today</label>
       <button class="primary full" value="default">Add to quest log</button>
     </form>
