@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#12110f" />
-  <title>Sidequest — Turn life into an adventure</title>
+  <title>LifeOS — Turn life into an adventure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
 <body>
   <div class="shell">
     <aside class="sidebar">
-      <a class="brand" href="#"><span class="brand-mark">S</span><span>sidequest</span></a>
+      <a class="brand" href="#"><span class="brand-mark">L</span><span>LifeOS</span></a>
       <nav>
         <button class="nav-item active" data-view="today"><span>⌁</span> Today</button>
         <button class="nav-item" data-view="quests"><span>◇</span> All quests</button>
@@ -33,6 +33,7 @@
       <header class="topbar">
         <button class="menu-button" id="menuButton">☰</button>
         <div class="streak">🔥 <strong id="streakCount">0</strong> day streak</div>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode">☾</button>
         <button class="sync-status" id="syncStatus">● Local only</button>
         <button class="primary compact" data-open="quest">＋ New quest</button>
       </header>
@@ -87,10 +88,11 @@
         <div class="cloud-card" id="cloudCard"></div>
         <form class="settings-card" id="settingsForm">
           <label>Adventurer name<input name="name" maxlength="24" required /></label>
-          <label>Avatar character<input name="avatar" maxlength="2" required /></label>
+          <label>Fallback initials<input name="avatar" maxlength="2" required /></label>
           <label>XP per level<input name="xpPerLevel" type="number" min="20" max="1000" step="10" required /></label>
           <label>Accent color<input name="accent" type="color" /></label>
-          <label>Background color<input name="background" type="color" /></label>
+          <label>Appearance<select name="theme"><option value="light">Light mode</option><option value="dark">Dark mode</option></select></label>
+          <div class="photo-setting"><div class="photo-preview" id="photoPreview">W</div><label>Profile picture<input name="photo" id="photoInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" /></label><button class="secondary" id="removePhotoButton" type="button">Remove photo</button></div>
           <button class="primary" type="submit">Save changes</button>
         </form>
         <section class="category-card">
