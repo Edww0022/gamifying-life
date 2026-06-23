@@ -124,10 +124,11 @@
         <label>Difficulty<select name="xp"><option value="10">Tiny · 10 XP</option><option value="25" selected>Easy · 25 XP</option><option value="50">Medium · 50 XP</option><option value="100">Epic · 100 XP</option></select></label>
       </div>
       <label>Coins earned<input name="coins" type="number" min="0" max="10000" step="1" value="5" required /><span class="input-suffix">coins</span></label>
+      <label>Completions allowed per day<input name="dailyLimit" type="number" min="1" max="100" step="1" value="1" required /><span class="input-suffix">times</span></label>
       <label>Schedule<select name="repeat" id="questRepeat"><option value="once">One-time</option><option value="daily">Repeat daily</option><option value="custom">Repeat on selected days</option></select></label>
       <fieldset class="repeat-days" id="repeatDays" hidden><legend>Repeat on</legend><div class="day-picker"><label><input type="checkbox" name="repeatDays" value="1"><span>Mon</span></label><label><input type="checkbox" name="repeatDays" value="2"><span>Tue</span></label><label><input type="checkbox" name="repeatDays" value="3"><span>Wed</span></label><label><input type="checkbox" name="repeatDays" value="4"><span>Thu</span></label><label><input type="checkbox" name="repeatDays" value="5"><span>Fri</span></label><label><input type="checkbox" name="repeatDays" value="6"><span>Sat</span></label><label><input type="checkbox" name="repeatDays" value="0"><span>Sun</span></label></div></fieldset>
       <label class="check-label"><input type="checkbox" name="today" checked /> Add to today</label>
-      <p class="form-help">Tip: recurring quests suggest fewer coins by default, but you can still type your own value.</p>
+      <p class="form-help">Tip: set completions per day to 1 for normal quests, or higher for habits you want to repeat multiple times.</p>
       <button class="primary full" id="questSubmitButton" value="default">Add to quest log</button>
     </form>
   </dialog>

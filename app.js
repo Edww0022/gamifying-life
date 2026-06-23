@@ -53,6 +53,7 @@ function normalizeQuest(q = {}) {
     category: q.category || DEFAULT_CATEGORIES[0].name,
     xp,
     coins,
+    dailyLimit: Math.max(1, Number(q.dailyLimit || q.maxPerDay || 1)),
     repeat,
     repeatDays,
     today: q.today !== false,
@@ -208,6 +209,17 @@ function questDueToday(q) {
   if (q.repeat === 'custom') return (q.repeatDays || []).includes(new Date().getDay());
   return Boolean(q.today);
 }
+function completionLimit(q) { return Math.max(1, Number(q.dailyLimit || 1)); }
+function completionsOn(q, date = today()) { return state.history.filter(h => h.quest === q.id && h.date === date).length; }
+function isQuestComplete(q) {
+  if (q.repeat === 'once' && q.completed && completionsOn(q) === 0) return true;
+  return completionsOn(q) >= completionLimit(q);
+}
+function completionText(q) {
+  const limit = completionLimit(q);
+  const count = completionsOn(q);
+  return limit > 1 ? ` · Done ${Math.min(count, limit)}/${limit} today` : '';
+}
 function repeatLabel(q) {
   if (q.repeat === 'daily') return 'Daily';
   if (q.repeat === 'custom') {
@@ -235,11 +247,13 @@ function refreshRecurringQuests() {
 
 function questHtml(q) {
   const cat = categoryInfo(q.category);
-  return `<article class="quest ${q.completed ? 'completed' : ''}" data-id="${q.id}" title="Double-click to edit this quest">
-    <button class="complete-button" aria-label="${q.completed ? 'Undo' : 'Complete'} quest">${q.completed ? '✓' : ''}</button>
+  const completed = isQuestComplete(q);
+  const count = completionsOn(q);
+  return `<article class="quest ${completed ? 'completed' : ''}" data-id="${q.id}" title="Double-click to edit this quest">
+    <button class="complete-button" aria-label="${completed ? 'Undo last completion' : 'Complete'} quest">${completed ? '✓' : count ? '+' : ''}</button>
     <div class="quest-main">
       <div class="quest-title">${iconHtml(cat)} ${esc(q.title)}</div>
-      <div class="quest-meta">${esc(q.category)} · ${esc(repeatLabel(q))}</div>
+      <div class="quest-meta">${esc(q.category)} · ${esc(repeatLabel(q))}${completionText(q)}</div>
     </div>
     <span class="xp-pill">+${q.xp} XP</span>
     <span class="coin-pill">+${q.coins} coins</span>
@@ -247,10 +261,10 @@ function questHtml(q) {
   </article>`;
 }
 function renderQuests() {
-  const todayQuests = state.quests.filter(q => questDueToday(q) && !q.completed);
+  const todayQuests = state.quests.filter(q => questDueToday(q) && !isQuestComplete(q));
   document.querySelector('#todayQuestList').innerHTML = todayQuests.map(questHtml).join('');
   document.querySelector('#todayEmpty').hidden = todayQuests.length > 0;
-  const list = state.quests.filter(q => activeFilter === 'all' || (activeFilter === 'completed' ? q.completed : !q.completed));
+  const list = state.quests.filter(q => activeFilter === 'all' || (activeFilter === 'completed' ? isQuestComplete(q) : !isQuestComplete(q)));
   document.querySelector('#allQuestList').innerHTML = list.map(questHtml).join('') || '<div class="empty-state"><span>◇</span><h3>No quests here</h3><p>Your next chapter is waiting.</p></div>';
 }
 
@@ -529,6 +543,7 @@ function openQuestDialog(id = null) {
     form.elements.xp.value = String(q.xp);
     form.elements.coins.value = String(q.coins);
     form.elements.coins.dataset.touched = 'true';
+    form.elements.dailyLimit.value = String(completionLimit(q));
     form.elements.repeat.value = q.repeat;
     form.elements.today.checked = Boolean(q.today);
     document.querySelector('#repeatDays').hidden = q.repeat !== 'custom';
@@ -630,6 +645,7 @@ document.querySelector('#questForm').addEventListener('submit', e => {
     category: f.get('category'),
     xp: Number(f.get('xp')),
     coins: Number(f.get('coins')),
+    dailyLimit: Math.max(1, Number(f.get('dailyLimit') || 1)),
     repeat,
     repeatDays,
     today: f.has('today')
@@ -688,23 +704,31 @@ document.addEventListener('click', e => {
     const q = state.quests.find(x => x.id === quest.dataset.id);
     if (!q) return;
     const before = levelInfo().level;
-    q.completed = !q.completed;
-    if (q.completed) {
+    if (!isQuestComplete(q)) {
       state.totalXp += q.xp;
       state.coins += q.coins;
       q.lastCompleted = today();
       state.history.push({ date: today(), xp: q.xp, coins: q.coins, quest: q.id, category: q.category });
+      q.completed = isQuestComplete(q);
     } else {
-      state.totalXp = Math.max(0, state.totalXp - q.xp);
-      state.coins = Math.max(0, state.coins - q.coins);
-      const i = state.history.map(h => h.quest).lastIndexOf(q.id);
-      if (i >= 0) state.history.splice(i, 1);
+      const i = state.history.map(h => h.quest === q.id && h.date === today()).lastIndexOf(true);
+      if (i >= 0) {
+        const removed = state.history[i];
+        state.totalXp = Math.max(0, state.totalXp - Number(removed.xp || q.xp));
+        state.coins = Math.max(0, state.coins - Number(removed.coins || q.coins));
+        state.history.splice(i, 1);
+      } else {
+        q.completed = false;
+      }
       q.lastCompleted = [...state.history].reverse().find(h => h.quest === q.id)?.date || null;
+      if (i >= 0) q.completed = isQuestComplete(q);
       state.spentXp = Math.min(state.spentXp, state.totalXp);
     }
     save();
     const after = levelInfo().level;
-    showToast(after > before ? `Level up! You reached level ${after} ✦` : q.completed ? `Quest complete! +${q.xp} XP and +${q.coins} coins` : 'Quest restored');
+    const count = completionsOn(q);
+    const limit = completionLimit(q);
+    showToast(after > before ? `Level up! You reached level ${after} ✦` : isQuestComplete(q) ? `Quest complete! ${count}/${limit} today` : `Progress saved: ${count}/${limit} today`);
   } else if (quest && e.target.closest('.more-button')) {
     if (confirm('Delete this quest?')) {
       state.quests = state.quests.filter(x => x.id !== quest.dataset.id);
