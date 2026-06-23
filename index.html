@@ -75,13 +75,18 @@
           <div>
             <p class="eyebrow">TREASURE SHOP</p>
             <h1>Reward store</h1>
-            <p class="subtle">Earn XP and coins, then buy the real-life rewards you placed into unlocked slots.</p>
+            <p class="subtle">Earn XP and coins, then redeem consumable rewards. Each redeem adds one piece to your inventory.</p>
             <p class="subtle store-hint"><strong id="storeSlots">1</strong> slots unlocked · <span id="nextSlotHint">100 XP until next store slot</span></p>
           </div>
           <button class="primary" data-open="reward">＋ New item</button>
         </div>
         <div class="reward-grid" id="rewardGrid"></div>
-        <div class="empty-state" id="rewardEmpty"><span>✦</span><h3>Your store is ready</h3><p>Add items into slots, then buy them with XP and coins.</p><button class="primary" data-open="reward">Add store item</button></div>
+        <div class="empty-state" id="rewardEmpty"><span>✦</span><h3>Your store is ready</h3><p>Add items into slots, then redeem them with XP and coins.</p><button class="primary" data-open="reward">Add store item</button></div>
+        <section class="inventory-section">
+          <div class="section-heading"><div><p class="eyebrow">BAG</p><h2>Your inventory</h2><p class="subtle">Consumables you have redeemed and can use later.</p></div></div>
+          <div class="inventory-list" id="inventoryList"></div>
+          <div class="empty-state compact-empty" id="inventoryEmpty"><span>◇</span><h3>Your bag is empty</h3><p>Redeem store items to collect them here.</p></div>
+        </section>
       </section>
 
       <section class="view" id="progressView">
@@ -139,7 +144,7 @@
       <label>Reward name<input name="title" placeholder="e.g. A guilt-free movie night" maxlength="70" required /></label>
       <label>Description<input name="description" placeholder="Optional note about this reward" maxlength="100" /></label>
       <div class="form-row">
-        <label>Store slot<input name="slot" type="number" min="1" step="1" value="1" required /></label>
+        <label>Store slot<input name="slot" type="number" min="1" max="12" step="1" value="1" required /></label>
         <label>Text icon<input name="icon" maxlength="3" value="🎁" /></label>
       </div>
       <div class="form-row">

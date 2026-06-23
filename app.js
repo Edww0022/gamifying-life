@@ -74,7 +74,7 @@ function normalizeReward(r = {}, index = 0) {
     coinCost: Number.isFinite(Number(r.coinCost)) ? Number(r.coinCost) : 0,
     icon: r.icon || '🎁',
     iconImage: validImageData(r.iconImage) ? r.iconImage : '',
-    purchased: Boolean(r.purchased)
+    owned: Math.max(0, Number(r.owned || r.quantity || (r.purchased ? 1 : 0)))
   };
 }
 
@@ -186,9 +186,10 @@ function levelInfo() {
 function spendableXp() { return Math.max(0, Number(state.totalXp || 0) - Number(state.spentXp || 0)); }
 function unlockedSlots() {
   const every = Math.max(20, Number(state.profile.slotEveryXp) || 100);
-  return Math.max(1, Math.floor(state.totalXp / every) + 1);
+  return Math.min(12, Math.max(1, Math.floor(state.totalXp / every) + 1));
 }
 function nextSlotText() {
+  if (unlockedSlots() >= 12) return 'All 12 store slots unlocked';
   const every = Math.max(20, Number(state.profile.slotEveryXp) || 100);
   const next = unlockedSlots() * every;
   return `${Math.max(0, next - state.totalXp)} XP until next store slot`;
@@ -271,7 +272,7 @@ function renderQuests() {
 function renderRewards() {
   const grid = document.querySelector('#rewardGrid');
   const slots = unlockedSlots();
-  const maxSlot = Math.max(slots, ...state.rewards.map(r => Number(r.slot || 1)), 1);
+  const maxSlot = 12;
   const cards = [];
   for (let slot = 1; slot <= maxSlot; slot++) {
     const unlocked = slot <= slots;
@@ -286,22 +287,35 @@ function renderRewards() {
       </article>`);
       continue;
     }
-    const canBuy = unlocked && !reward.purchased && spendableXp() >= reward.xpCost && state.coins >= reward.coinCost;
-    cards.push(`<article class="reward-card ${unlocked ? 'unlocked' : 'locked'} ${reward.purchased ? 'purchased' : ''}" data-id="${reward.id}">
+    const canBuy = unlocked && spendableXp() >= reward.xpCost && state.coins >= reward.coinCost;
+    cards.push(`<article class="reward-card ${unlocked ? 'unlocked' : 'locked'} ${Number(reward.owned || 0) ? 'owned' : ''}" data-id="${reward.id}">
       <button class="delete-reward" aria-label="Delete reward">×</button>
       <div class="slot-label">Slot ${slot}</div>
       <div class="reward-icon">${iconHtml(reward, 'big-icon')}</div>
       <h3>${esc(reward.title)}</h3>
       ${reward.description ? `<p>${esc(reward.description)}</p>` : '<p>A store item for your real-life adventure.</p>'}
       <div class="reward-price"><span>${reward.xpCost} XP</span><span>${reward.coinCost} coins</span></div>
-      <div class="reward-status">${reward.purchased ? '✓ PURCHASED' : unlocked ? (canBuy ? 'READY TO BUY' : 'SAVE UP TO BUY') : `LOCKED UNTIL SLOT ${slot}`}</div>
-      ${unlocked && !reward.purchased ? `<button class="primary compact buy-reward" type="button">Buy item</button>` : ''}
+      <div class="reward-status">${unlocked ? (canBuy ? 'READY TO REDEEM' : 'SAVE UP TO REDEEM') : `LOCKED UNTIL SLOT ${slot}`} · Owned: ${Number(reward.owned || 0)}</div>
+      ${unlocked ? `<button class="primary compact buy-reward" type="button">Redeem +1</button>` : ''}
     </article>`);
   }
   grid.innerHTML = cards.join('');
   document.querySelector('#rewardEmpty').hidden = state.rewards.length > 0 || slots > 0;
-  document.querySelector('#storeSlots').textContent = slots;
+  document.querySelector('#storeSlots').textContent = `${slots} / 12`;
   document.querySelector('#nextSlotHint').textContent = nextSlotText();
+  renderInventory();
+}
+
+function renderInventory() {
+  const list = document.querySelector('#inventoryList');
+  const owned = state.rewards.filter(r => Number(r.owned || 0) > 0).sort((a, b) => a.title.localeCompare(b.title));
+  list.innerHTML = owned.map(r => `<article class="inventory-item" data-id="${r.id}">
+    <div class="inventory-icon">${iconHtml(r, 'big-icon')}</div>
+    <div><strong>${esc(r.title)}</strong><small>${r.description ? esc(r.description) : 'Consumable reward'}</small></div>
+    <span class="inventory-count">×${Number(r.owned || 0)}</span>
+    <button class="secondary use-inventory" type="button">Use one</button>
+  </article>`).join('');
+  document.querySelector('#inventoryEmpty').hidden = owned.length > 0;
 }
 
 function categoryRow(c) {
@@ -558,14 +572,14 @@ function openRewardDialog(slot = null) {
   const form = document.querySelector('#rewardForm');
   form.reset();
   pendingRewardIconImage = '';
-  form.elements.slot.value = slot || firstOpenRewardSlot();
+  form.elements.slot.value = Math.min(12, slot || firstOpenRewardSlot());
   document.querySelector('#rewardIconPreview').innerHTML = iconHtml({ icon: '🎁', iconImage: '' }, 'big-icon');
   document.querySelector('#rewardDialog').showModal();
 }
 function firstOpenRewardSlot() {
   const slots = unlockedSlots();
   for (let slot = 1; slot <= slots; slot++) if (!state.rewards.some(r => Number(r.slot) === slot)) return slot;
-  return slots;
+  return Math.min(12, slots);
 }
 
 document.querySelectorAll('.nav-item').forEach(b => b.addEventListener('click', () => navigate(b.dataset.view)));
@@ -681,6 +695,7 @@ document.querySelector('#rewardForm').addEventListener('submit', e => {
   e.preventDefault();
   const f = new FormData(e.currentTarget);
   const slot = Number(f.get('slot'));
+  if (slot < 1 || slot > 12) { showToast('Store slots go from 1 to 12'); return; }
   if (state.rewards.some(r => Number(r.slot) === slot)) { showToast('That store slot already has an item'); return; }
   state.rewards.push({
     id: uid(),
@@ -691,7 +706,7 @@ document.querySelector('#rewardForm').addEventListener('submit', e => {
     coinCost: Number(f.get('coinCost')),
     icon: f.get('icon').trim() || '🎁',
     iconImage: pendingRewardIconImage,
-    purchased: false
+    owned: 0
   });
   document.querySelector('#rewardDialog').close();
   save();
@@ -745,13 +760,22 @@ document.addEventListener('click', e => {
     save();
   } else if (reward && e.target.closest('.buy-reward')) {
     const r = state.rewards.find(x => x.id === reward.dataset.id);
-    if (!r || r.purchased) return;
+    if (!r) return;
     if (spendableXp() < r.xpCost || state.coins < r.coinCost) { showToast('Not enough XP or coins yet'); return; }
     state.spentXp += r.xpCost;
     state.coins -= r.coinCost;
-    r.purchased = true;
+    r.owned = Number(r.owned || 0) + 1;
     save();
-    showToast(`Purchased: ${r.title}`);
+    showToast(`Redeemed +1 ${r.title}`);
+  }
+
+  const inventoryItem = e.target.closest('.inventory-item');
+  if (inventoryItem && e.target.closest('.use-inventory')) {
+    const r = state.rewards.find(x => x.id === inventoryItem.dataset.id);
+    if (!r || Number(r.owned || 0) <= 0) return;
+    r.owned = Math.max(0, Number(r.owned || 0) - 1);
+    save();
+    showToast(`Used one ${r.title}`);
   }
 });
 document.addEventListener('dblclick', e => {
