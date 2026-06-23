@@ -54,6 +54,7 @@
 
         <div class="stats-grid">
           <article class="stat"><span class="stat-icon lavender">✦</span><div><small>Total XP</small><strong id="totalXpStat">0</strong></div></article>
+          <article class="stat"><span class="stat-icon gold">●</span><div><small>Coins</small><strong id="coinStat">0</strong></div></article>
           <article class="stat"><span class="stat-icon mint">✓</span><div><small>Quests done</small><strong id="doneStat">0</strong></div></article>
           <article class="stat"><span class="stat-icon peach">↗</span><div><small>This week</small><strong id="weekStat">0 XP</strong></div></article>
         </div>
@@ -64,15 +65,23 @@
       </section>
 
       <section class="view" id="questsView">
-        <div class="page-heading"><div><p class="eyebrow">QUEST LOG</p><h1>All quests</h1><p class="subtle">Every step counts, no matter how small.</p></div><button class="primary" data-open="quest">＋ New quest</button></div>
+        <div class="page-heading"><div><p class="eyebrow">QUEST LOG</p><h1>All quests</h1><p class="subtle">Every step counts, no matter how small. Double-click a quest to edit it.</p></div><button class="primary" data-open="quest">＋ New quest</button></div>
         <div class="filter-row" id="questFilters"><button class="chip active" data-filter="active">Active</button><button class="chip" data-filter="completed">Completed</button><button class="chip" data-filter="all">All</button></div>
         <div class="quest-list" id="allQuestList"></div>
       </section>
 
       <section class="view" id="rewardsView">
-        <div class="page-heading"><div><p class="eyebrow">TREASURE CHEST</p><h1>Rewards</h1><p class="subtle">Give your future self something lovely to work toward.</p></div><button class="primary" data-open="reward">＋ New reward</button></div>
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">TREASURE SHOP</p>
+            <h1>Reward store</h1>
+            <p class="subtle">Earn XP and coins, then buy the real-life rewards you placed into unlocked slots.</p>
+            <p class="subtle store-hint"><strong id="storeSlots">1</strong> slots unlocked · <span id="nextSlotHint">100 XP until next store slot</span></p>
+          </div>
+          <button class="primary" data-open="reward">＋ New item</button>
+        </div>
         <div class="reward-grid" id="rewardGrid"></div>
-        <div class="empty-state" id="rewardEmpty"><span>✦</span><h3>Dream up a reward</h3><p>Choose something to unlock when you reach an XP milestone.</p><button class="primary" data-open="reward">Add a reward</button></div>
+        <div class="empty-state" id="rewardEmpty"><span>✦</span><h3>Your store is ready</h3><p>Add items into slots, then buy them with XP and coins.</p><button class="primary" data-open="reward">Add store item</button></div>
       </section>
 
       <section class="view" id="progressView">
@@ -90,49 +99,61 @@
           <label>Adventurer name<input name="name" maxlength="24" required /></label>
           <label>Fallback initials<input name="avatar" maxlength="2" required /></label>
           <label>XP per level<input name="xpPerLevel" type="number" min="20" max="1000" step="10" required /></label>
+          <label>XP per new store slot<input name="slotEveryXp" type="number" min="20" max="5000" step="10" required /></label>
           <label>Accent color<input name="accent" type="color" /></label>
           <label>Appearance<select name="theme"><option value="light">Light mode</option><option value="dark">Dark mode</option></select></label>
           <div class="photo-setting"><div class="photo-preview" id="photoPreview">W</div><label>Profile picture<input name="photo" id="photoInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" /></label><button class="secondary" id="removePhotoButton" type="button">Remove photo</button></div>
           <button class="primary" type="submit">Save changes</button>
         </form>
         <section class="category-card">
-          <div class="category-heading"><div><strong>Quest categories</strong><p>Each category becomes a power on your character chart.</p></div><button class="secondary" type="button" id="addCategoryButton">＋ Add category</button></div>
+          <div class="category-heading"><div><strong>Quest categories and icons</strong><p>Each category becomes a power on your character chart. You can use text icons or upload pictures.</p></div><button class="secondary" type="button" id="addCategoryButton">＋ Add category</button></div>
           <div class="category-editor" id="categoryEditor"></div>
           <button class="primary" type="button" id="saveCategoriesButton">Save categories</button>
         </section>
-        <div class="danger-card"><div><strong>Fresh start</strong><p>Erase all quests, rewards, and progress from this device.</p></div><button class="danger-button" id="resetButton">Reset everything</button></div>
+        <div class="danger-card"><div><strong>Fresh start</strong><p>Erase all quests, rewards, coins, and progress from this device.</p></div><button class="danger-button" id="resetButton">Reset everything</button></div>
       </section>
     </main>
   </div>
 
   <dialog id="questDialog">
     <form method="dialog" id="questForm">
-      <div class="dialog-head"><div><p class="eyebrow">NEW ADVENTURE</p><h2>Create a quest</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+      <div class="dialog-head"><div><p class="eyebrow" id="questDialogEyebrow">NEW ADVENTURE</p><h2 id="questDialogTitle">Create a quest</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
       <label>Quest name<input name="title" placeholder="e.g. Take a 20 minute walk" maxlength="70" required autofocus /></label>
       <div class="form-row">
         <label>Category<select name="category" id="questCategory"></select></label>
         <label>Difficulty<select name="xp"><option value="10">Tiny · 10 XP</option><option value="25" selected>Easy · 25 XP</option><option value="50">Medium · 50 XP</option><option value="100">Epic · 100 XP</option></select></label>
       </div>
+      <label>Coins earned<input name="coins" type="number" min="0" max="10000" step="1" value="5" required /><span class="input-suffix">coins</span></label>
       <label>Schedule<select name="repeat" id="questRepeat"><option value="once">One-time</option><option value="daily">Repeat daily</option><option value="custom">Repeat on selected days</option></select></label>
       <fieldset class="repeat-days" id="repeatDays" hidden><legend>Repeat on</legend><div class="day-picker"><label><input type="checkbox" name="repeatDays" value="1"><span>Mon</span></label><label><input type="checkbox" name="repeatDays" value="2"><span>Tue</span></label><label><input type="checkbox" name="repeatDays" value="3"><span>Wed</span></label><label><input type="checkbox" name="repeatDays" value="4"><span>Thu</span></label><label><input type="checkbox" name="repeatDays" value="5"><span>Fri</span></label><label><input type="checkbox" name="repeatDays" value="6"><span>Sat</span></label><label><input type="checkbox" name="repeatDays" value="0"><span>Sun</span></label></div></fieldset>
       <label class="check-label"><input type="checkbox" name="today" checked /> Add to today</label>
-      <button class="primary full" value="default">Add to quest log</button>
+      <p class="form-help">Tip: recurring quests suggest fewer coins by default, but you can still type your own value.</p>
+      <button class="primary full" id="questSubmitButton" value="default">Add to quest log</button>
     </form>
   </dialog>
 
   <dialog id="rewardDialog">
     <form method="dialog" id="rewardForm">
-      <div class="dialog-head"><div><p class="eyebrow">NEW TREASURE</p><h2>Create a reward</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
+      <div class="dialog-head"><div><p class="eyebrow">STORE ITEM</p><h2>Create a reward</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
       <label>Reward name<input name="title" placeholder="e.g. A guilt-free movie night" maxlength="70" required /></label>
-      <label>Unlock at<input name="xp" type="number" min="10" step="10" value="100" required /><span class="input-suffix">XP</span></label>
-      <label>Icon<select name="icon"><option>☕</option><option>🎬</option><option>🎮</option><option>🛍️</option><option>🍰</option><option>🌿</option><option>✈️</option><option>🎁</option></select></label>
-      <button class="primary full" value="default">Add reward</button>
+      <label>Description<input name="description" placeholder="Optional note about this reward" maxlength="100" /></label>
+      <div class="form-row">
+        <label>Store slot<input name="slot" type="number" min="1" step="1" value="1" required /></label>
+        <label>Text icon<input name="icon" maxlength="3" value="🎁" /></label>
+      </div>
+      <div class="form-row">
+        <label>XP price<input name="xpCost" type="number" min="0" step="5" value="50" required /><span class="input-suffix">XP</span></label>
+        <label>Coin price<input name="coinCost" type="number" min="0" step="1" value="10" required /><span class="input-suffix">coins</span></label>
+      </div>
+      <div class="photo-setting icon-setting"><div class="photo-preview" id="rewardIconPreview">🎁</div><label>Upload item icon<input name="rewardIconFile" id="rewardIconFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" /></label></div>
+      <button class="primary full" value="default">Add store item</button>
     </form>
   </dialog>
+
   <dialog id="authDialog">
     <form method="dialog" id="authForm">
       <div class="dialog-head"><div><p class="eyebrow">CLOUD SAVE</p><h2>Sync your adventure</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
-      <p class="auth-copy">Use the same account on your phone and computer to keep quests, XP, and rewards in sync.</p>
+      <p class="auth-copy">Use the same account on your phone and computer to keep quests, XP, coins, and rewards in sync.</p>
       <label>Email<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label>
       <label>Password<input name="password" type="password" autocomplete="current-password" minlength="6" required /></label>
       <button class="forgot-button" id="forgotPasswordButton" type="button">Forgot your password?</button>
@@ -140,6 +161,7 @@
       <p class="auth-message" id="authMessage"></p>
     </form>
   </dialog>
+
   <dialog id="resetPasswordDialog">
     <form method="dialog" id="resetPasswordForm">
       <div class="dialog-head"><div><p class="eyebrow">ACCOUNT RECOVERY</p><h2>Choose a new password</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Close">×</button></div>
@@ -150,6 +172,7 @@
       <p class="auth-message" id="resetPasswordMessage"></p>
     </form>
   </dialog>
+
   <div class="toast" id="toast"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
