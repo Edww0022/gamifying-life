@@ -303,6 +303,8 @@ function renderRewards() {
   document.querySelector('#rewardEmpty').hidden = state.rewards.length > 0 || slots > 0;
   document.querySelector('#storeSlots').textContent = `${slots} / 12`;
   document.querySelector('#nextSlotHint').textContent = nextSlotText();
+  document.querySelector('#storeXpBalance').textContent = spendableXp();
+  document.querySelector('#storeCoinBalance').textContent = state.coins;
   renderInventory();
 }
 
