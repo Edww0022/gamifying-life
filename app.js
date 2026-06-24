@@ -891,8 +891,28 @@ window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => { if (document.querySelector('#progressView').classList.contains('active')) drawCharts(); }, 120);
 });
+function enhanceNumberInputs() {
+  document.querySelectorAll('label input[type="number"]').forEach(input => {
+    const label = input.closest('label');
+    if (!label || label.querySelector('.number-stepper')) return;
+    label.classList.add('number-field');
+    const stepper = document.createElement('span');
+    stepper.className = 'number-stepper';
+    stepper.innerHTML = '<button type="button" aria-label="Increase value">▲</button><button type="button" aria-label="Decrease value">▼</button>';
+    const change = direction => {
+      if (direction > 0) input.stepUp();
+      else input.stepDown();
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    stepper.firstElementChild.addEventListener('click', () => change(1));
+    stepper.lastElementChild.addEventListener('click', () => change(-1));
+    label.appendChild(stepper);
+  });
+}
 const now = new Date();
 document.querySelector('#dateLabel').textContent = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase();
 document.querySelector('#dayPeriod').textContent = now.getHours() < 12 ? 'morning' : now.getHours() < 18 ? 'afternoon' : 'evening';
+enhanceNumberInputs();
 render();
 initCloud();
