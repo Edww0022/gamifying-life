@@ -21,7 +21,6 @@ const defaults = {
   },
   categories: DEFAULT_CATEGORIES,
   totalXp: 0,
-  spentXp: 0,
   coins: 0,
   quests: [],
   rewards: [],
@@ -64,13 +63,11 @@ function normalizeQuest(q = {}) {
 }
 
 function normalizeReward(r = {}, index = 0) {
-  const legacyXp = Number(r.xp || 0);
   return {
     id: r.id || uid(),
     title: r.title || 'Mystery reward',
     description: r.description || '',
     slot: Math.max(1, Number(r.slot || index + 1)),
-    xpCost: Number.isFinite(Number(r.xpCost)) ? Number(r.xpCost) : legacyXp,
     coinCost: Number.isFinite(Number(r.coinCost)) ? Number(r.coinCost) : 0,
     icon: r.icon || '🎁',
     iconImage: validImageData(r.iconImage) ? r.iconImage : '',
@@ -98,7 +95,6 @@ function normalizeState(raw = {}) {
     profile: { ...base.profile, ...(raw.profile || {}) },
     categories,
     totalXp: Number(raw.totalXp || 0),
-    spentXp: Number(raw.spentXp || 0),
     coins: Number(raw.coins || 0),
     quests: Array.isArray(raw.quests) ? raw.quests.map(normalizeQuest) : [],
     rewards: Array.isArray(raw.rewards) ? raw.rewards.map(normalizeReward) : [],
@@ -183,7 +179,6 @@ function levelInfo() {
   const level = Math.floor(state.totalXp / per) + 1;
   return { per, level, inside: state.totalXp % per, remaining: per - (state.totalXp % per) };
 }
-function spendableXp() { return Math.max(0, Number(state.totalXp || 0) - Number(state.spentXp || 0)); }
 function unlockedSlots() {
   const every = Math.max(20, Number(state.profile.slotEveryXp) || 100);
   return Math.min(12, Math.max(1, Math.floor(state.totalXp / every) + 1));
@@ -287,14 +282,14 @@ function renderRewards() {
       </article>`);
       continue;
     }
-    const canBuy = unlocked && spendableXp() >= reward.xpCost && state.coins >= reward.coinCost;
+    const canBuy = unlocked && state.coins >= reward.coinCost;
     cards.push(`<article class="reward-card ${unlocked ? 'unlocked' : 'locked'} ${Number(reward.owned || 0) ? 'owned' : ''}" data-id="${reward.id}">
       <button class="delete-reward" aria-label="Delete reward">×</button>
       <div class="slot-label">Slot ${slot}</div>
       <div class="reward-icon">${iconHtml(reward, 'big-icon')}</div>
       <h3>${esc(reward.title)}</h3>
       ${reward.description ? `<p>${esc(reward.description)}</p>` : '<p>A store item for your real-life adventure.</p>'}
-      <div class="reward-price"><span>${reward.xpCost} XP</span><span>${reward.coinCost} coins</span></div>
+      <div class="reward-price"><span>${reward.coinCost} coins</span></div>
       <div class="reward-status">${unlocked ? (canBuy ? 'READY TO REDEEM' : 'SAVE UP TO REDEEM') : `LOCKED UNTIL SLOT ${slot}`} · Owned: ${Number(reward.owned || 0)}</div>
       ${unlocked ? `<button class="primary compact buy-reward" type="button">Redeem +1</button>` : ''}
     </article>`);
@@ -303,7 +298,6 @@ function renderRewards() {
   document.querySelector('#rewardEmpty').hidden = state.rewards.length > 0 || slots > 0;
   document.querySelector('#storeSlots').textContent = `${slots} / 12`;
   document.querySelector('#nextSlotHint').textContent = nextSlotText();
-  document.querySelector('#storeXpBalance').textContent = spendableXp();
   document.querySelector('#storeCoinBalance').textContent = state.coins;
   renderInventory();
 }
@@ -704,7 +698,6 @@ document.querySelector('#rewardForm').addEventListener('submit', e => {
     title: f.get('title').trim(),
     description: f.get('description').trim(),
     slot,
-    xpCost: Number(f.get('xpCost')),
     coinCost: Number(f.get('coinCost')),
     icon: f.get('icon').trim() || '🎁',
     iconImage: pendingRewardIconImage,
@@ -739,7 +732,6 @@ document.addEventListener('click', e => {
       }
       q.lastCompleted = [...state.history].reverse().find(h => h.quest === q.id)?.date || null;
       if (i >= 0) q.completed = isQuestComplete(q);
-      state.spentXp = Math.min(state.spentXp, state.totalXp);
     }
     save();
     const after = levelInfo().level;
@@ -763,8 +755,7 @@ document.addEventListener('click', e => {
   } else if (reward && e.target.closest('.buy-reward')) {
     const r = state.rewards.find(x => x.id === reward.dataset.id);
     if (!r) return;
-    if (spendableXp() < r.xpCost || state.coins < r.coinCost) { showToast('Not enough XP or coins yet'); return; }
-    state.spentXp += r.xpCost;
+    if (state.coins < r.coinCost) { showToast('Not enough coins yet'); return; }
     state.coins -= r.coinCost;
     r.owned = Number(r.owned || 0) + 1;
     save();
